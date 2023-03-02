@@ -21,6 +21,7 @@ func internalServerError(w http.ResponseWriter, r *http.Request) {
     w.Write([]byte("internal server error"))
 }
 
+//////////////////////////////////
 // services.go TODOS SERVICE 
 func getTodos (rw http.ResponseWriter, rq *http.Request) {
 
@@ -31,7 +32,7 @@ func updateTodo (rw http.ResponseWriter, rq *http.Request) {}
 func deleteTodo (rw http.ResponseWriter, rq *http.Request) {}
 
 
-
+//////////////////////////////////
 // controllers.go TODOS CONTROLLER
 var (
     listTodosRegex   = regexp.MustCompile(`^\/todos[\/]*$`)
@@ -67,6 +68,7 @@ func todosController(w http.ResponseWriter, r *http.Request) {
 		}
 }
 
+//////////////////////////////////
 // main.go SERVER
 
 func hello(rw http.ResponseWriter, rq *http.Request) {
