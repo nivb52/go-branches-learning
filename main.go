@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -22,22 +23,38 @@ func internalServerError(w http.ResponseWriter, r *http.Request) {
 }
 
 // ////////////////////////////////
+// reposetory.go TODOS REPO
+type todo struct {
+	ID     string `json:"id"`
+	Title  string `json:"title"`
+	IsDone string `json:"isDone"`
+}
+
+var todos = []todo{{ID: "1", Title: "Learn GO", IsDone: "false"}, {ID: "2", Title: "Learn REACT", IsDone: "true"}}
+
+// ////////////////////////////////
 // services.go TODOS SERVICE
-func getTodos(rw http.ResponseWriter, rq *http.Request) {
-	rw.Write([]byte("<h1 style='color: red;'>getTodos</h1>"))
+func getTodos(w http.ResponseWriter, r *http.Request) {
+	jsonBytes, err := json.Marshal(todos)
+	if err != nil {
+		internalServerError(w, r)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonBytes)
 }
-func getTodoById(rw http.ResponseWriter, rq *http.Request) {
-	//id := rq.RequestURI()
-	rw.Write([]byte("<h1 style='color: red;'>getTodo By Id</h1><h2></h2>"))
+func getTodoById(w http.ResponseWriter, q *http.Request) {
+	//id := q.RequestURI()
+	w.Write([]byte("<h1 style='color: red;'>getTodo By Id</h1><h2></h2>"))
 }
-func createTodo(rw http.ResponseWriter, rq *http.Request) {
-	rw.Write([]byte("<h1 style='color: red;'>createTodo</h1><h2>Data</h2><p></p>"))
+func createTodo(w http.ResponseWriter, q *http.Request) {
+	w.Write([]byte("<h1 style='color: red;'>createTodo</h1><h2>Data</h2><p></p>"))
 }
-func updateTodo(rw http.ResponseWriter, rq *http.Request) {
-	rw.Write([]byte("<h1 style='color: red;'>updateTodo By Id</h1><h2></h2>"))
+func updateTodo(w http.ResponseWriter, q *http.Request) {
+	w.Write([]byte("<h1 style='color: red;'>updateTodo By Id</h1><h2></h2>"))
 }
-func deleteTodo(rw http.ResponseWriter, rq *http.Request) {
-	rw.Write([]byte("<h1 style='color: red;'>deleteTodo By Id</h1><h2></h2>"))
+func deleteTodo(w http.ResponseWriter, q *http.Request) {
+	w.Write([]byte("<h1 style='color: red;'>deleteTodo By Id</h1><h2></h2>"))
 }
 
 // ////////////////////////////////
