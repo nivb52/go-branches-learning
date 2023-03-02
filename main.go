@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"regexp"
@@ -89,8 +90,9 @@ func liveness(rw http.ResponseWriter, rq *http.Request) {
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/todos/", todosController)
-	mux.HandleFunc("/hello", hello)
 	mux.HandleFunc("/", liveness)
-	log.Fatal(http.ListenAndServe(":5000", nil))
+	mux.HandleFunc("/hello", hello)
+	mux.HandleFunc("/todos", todosController)
+	log.Println(fmt.Sprintf("Starting Server on port %s", "5000"))
+	log.Fatal(http.ListenAndServe(":5000", mux))
 }
