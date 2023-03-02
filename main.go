@@ -24,12 +24,21 @@ func internalServerError(w http.ResponseWriter, r *http.Request) {
 //////////////////////////////////
 // services.go TODOS SERVICE 
 func getTodos (rw http.ResponseWriter, rq *http.Request) {
-
+	rw.Write([]byte("<h1 style='color: red;'>getTodos</h1>"))
 }
-func getTodoById (rw http.ResponseWriter, rq *http.Request) {}
-func createTodo (rw http.ResponseWriter, rq *http.Request) {}
-func updateTodo (rw http.ResponseWriter, rq *http.Request) {}
-func deleteTodo (rw http.ResponseWriter, rq *http.Request) {}
+func getTodoById (rw http.ResponseWriter, rq *http.Request) {
+	//id := rq.RequestURI()
+	rw.Write([]byte("<h1 style='color: red;'>getTodo By Id</h1><h2></h2>"))
+}
+func createTodo (rw http.ResponseWriter, rq *http.Request) {
+	rw.Write([]byte("<h1 style='color: red;'>createTodo</h1><h2>Data</h2><p></p>"))
+}
+func updateTodo (rw http.ResponseWriter, rq *http.Request) {
+	rw.Write([]byte("<h1 style='color: red;'>updateTodo By Id</h1><h2></h2>"))
+}
+func deleteTodo (rw http.ResponseWriter, rq *http.Request) {
+	rw.Write([]byte("<h1 style='color: red;'>deleteTodo By Id</h1><h2></h2>"))
+}
 
 
 //////////////////////////////////
