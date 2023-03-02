@@ -1,5 +1,8 @@
 # go-branches-learning
 
-## Simple Http Server
+## Todos CRUD
 following: 
-[GoLang Simple HTTP Web Server | Beginners Tutorial](https://www.youtube.com/watch?v=YMFkgN9r_jg)
+[ GoLang Simple TODO App using HTML Templates | Beginners Tutorial ](https://www.youtube.com/watch?v=UeUDGEa0AX4)
+
+And adding from this basic Read only example
+Full CRUD
