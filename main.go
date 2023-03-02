@@ -10,16 +10,62 @@ import (
 
 func notFound(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
-	w.Write([]byte("not found"))
+	message := "not found"
+	// w.Write([]byte(message))
+	jsonBytes, err := json.Marshal("{message:"+message+"}")
+	if err != nil {
+		internalServerError(w, r)
+		return
+	}
+	w.Write(jsonBytes)
 }
+
 func notImplemented(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
-	w.Write([]byte("nnot implemented"))
+	message := "not implemented"
+	// w.Write([]byte(message))
+	jsonBytes, err := json.Marshal("{message:"+message+"}")
+	if err != nil {
+		internalServerError(w, r)
+		return
+	}
+	w.Write(jsonBytes)
 }
 
 func internalServerError(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte("internal server error"))
+	w.WriteHeader(http.StatusNotImplemented)
+	message := "internal server error"
+	// w.Write([]byte(message))
+	jsonBytes, err := json.Marshal("{message:"+message+"}")
+	if err != nil {
+		internalServerError(w, r)
+		return
+	}
+	w.Write(jsonBytes)
+}
+
+// ////////////////////////////////
+// utils.go TODO UTILS
+var (
+	listTodosRegex        = regexp.MustCompile(`^\/todos[\/]*$`)
+	todoRegex             = regexp.MustCompile(`^\/todos\/(\d+)$`)
+	createTodoRegex       = regexp.MustCompile(`^\/todos[\/]*$`)
+	createBatchTodosRegex = regexp.MustCompile(`^\/todos\/batch[\/]*$`)
+	todoIdRegex           = regexp.MustCompile(`/todos\/?(?P<id>\W|\w*)/gm`)
+)
+
+func makeSuccessResponse(w http.ResponseWriter, r *http.Request) func(todo) {
+	return func(data todo) {
+		jsonBytes, err := json.Marshal(data)
+		if err != nil {
+			internalServerError(w, r)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write(jsonBytes)
+		return
+	}
 }
 
 // ////////////////////////////////
@@ -43,10 +89,45 @@ func getTodos(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonBytes)
 }
-func getTodoById(w http.ResponseWriter, q *http.Request) {
+
+func getTodoById(w http.ResponseWriter, r *http.Request) {
 	//id := q.RequestURI()
-	w.Write([]byte("<h1 style='color: red;'>getTodo By Id</h1><h2></h2>"))
+	// matches := getUserRe.FindStringSubmatch()
+	matches := todoIdRegex.FindStringSubmatch(r.URL.Path)
+	fmt.Printf("by regex name: %s\n", matches)
+
+	if len(matches) < 1 {
+		notFound(w, r)
+		return
+	}
+	regexRes := make(map[string]string)
+	for i, name := range todoIdRegex.SubexpNames() {
+		fmt.Printf("by regex name: %s\n", name)
+		if i != 0 && name != "" {
+			regexRes[name] = matches[i]
+		}
+	}
+	fmt.Printf("by regex name: %s\n", regexRes["id"])
+	id := regexRes["id"]
+	if id == "" {
+		notFound(w, r)
+		return
+	}
+
+	successResponseFunc := makeSuccessResponse(w, r)
+	for _, todo := range todos {
+		if id == todo.ID {
+			successResponseFunc(todo)
+
+			return
+		}
+	}
+
+	notFound(w, r)
+	return
+
 }
+
 func createTodo(w http.ResponseWriter, q *http.Request) {
 	w.Write([]byte("<h1 style='color: red;'>createTodo</h1><h2>Data</h2><p></p>"))
 }
@@ -59,12 +140,6 @@ func deleteTodo(w http.ResponseWriter, q *http.Request) {
 
 // ////////////////////////////////
 // controllers.go TODOS CONTROLLER
-var (
-	listTodosRegex        = regexp.MustCompile(`^\/todos[\/]*$`)
-	todoRegex             = regexp.MustCompile(`^\/todos\/(\d+)$`)
-	createTodoRegex       = regexp.MustCompile(`^\/todos[\/]*$`)
-	createBatchTodosRegex = regexp.MustCompile(`^\/todos\/batch[\/]*$`)
-)
 
 func todosController(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
@@ -109,7 +184,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", liveness)
 	mux.HandleFunc("/hello", hello)
-	mux.HandleFunc("/todos", todosController)
+	mux.HandleFunc("/todos/", todosController)
 	log.Println(fmt.Sprintf("Starting Server on port %s", "5000"))
 	log.Fatal(http.ListenAndServe(":5000", mux))
 }
