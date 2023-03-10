@@ -1,0 +1,50 @@
+@host = localhost:5000
+
+
+// Get All Todos
+GET http://{{host}}/todos/ HTTP/1.1
+content-type: application/json
+
+###
+
+
+// Get All Todos
+GET http://{{host}}/todos HTTP/1.1
+content-type: application/json
+
+###
+
+
+// Get Todo By ID
+GET http://{{host}}/todos/1 HTTP/1.1
+content-type: application/json
+
+###
+
+
+// Create Todo
+POST http://{{host}}/todos HTTP/1.1
+content-type: application/json
+    
+{
+    "title": "test-todo",
+    "IsDone": false
+}
+
+###
+
+
+// Update Todo
+PUT http://{{host}}/todos/2 HTTP/1.1
+content-type: application/json
+
+{
+    "title": "updated-todo",
+    "isDone": "true"
+}
+
+###
+
+// Delete Todo
+DELETE http://{{host}}/api/products/3 HTTP/1.1
+content-type: application/json
