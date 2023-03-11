@@ -21,6 +21,11 @@ content-type: application/json
 
 ###
 
+// Delete Todo
+DELETE http://{{host}}/todos/15 HTTP/1.1
+content-type: application/json
+
+###
 
 // Create Todo
 POST http://{{host}}/todos HTTP/1.1
@@ -43,8 +48,3 @@ content-type: application/json
     "isDone": "true"
 }
 
-###
-
-// Delete Todo
-DELETE http://{{host}}/api/products/3 HTTP/1.1
-content-type: application/json

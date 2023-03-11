@@ -12,7 +12,7 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	message := "not found"
 	// w.Write([]byte(message))
-	jsonBytes, err := json.Marshal("{message:"+message+"}")
+	jsonBytes, err := json.Marshal("{message:" + message + "}")
 	if err != nil {
 		internalServerError(w, r)
 		return
@@ -24,7 +24,7 @@ func notImplemented(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 	message := "not implemented"
 	// w.Write([]byte(message))
-	jsonBytes, err := json.Marshal("{message:"+message+"}")
+	jsonBytes, err := json.Marshal("{message:" + message + "}")
 	if err != nil {
 		internalServerError(w, r)
 		return
@@ -37,7 +37,7 @@ func internalServerError(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 	message := "internal server error"
 	// w.Write([]byte(message))
-	jsonBytes, err := json.Marshal("{message:"+message+"}")
+	jsonBytes, err := json.Marshal("{message:" + message + "}")
 	if err != nil {
 		internalServerError(w, r)
 		return
@@ -68,6 +68,19 @@ func makeSuccessResponse(w http.ResponseWriter, r *http.Request) func(*todo) {
 	}
 }
 
+func makeBatchSuccessResponse(w http.ResponseWriter, r *http.Request) func(*[]todo) {
+	return func(data *[]todo) {
+		jsonBytes, err := json.Marshal(&data)
+		if err != nil {
+			internalServerError(w, r)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write(jsonBytes)
+		return
+	}
+}
+
 // ////////////////////////////////
 // reposetory.go TODOS REPO
 type todo struct {
@@ -76,12 +89,11 @@ type todo struct {
 	IsDone string `json:"isDone"`
 }
 
-var todos = []todo{{ID: "1", Title: "Learn GO", IsDone: "false"}, {ID: "2", Title: "Learn REACT", IsDone: "true"},{ID: "15", Title: "Learn Advanced Go", IsDone: "false"} }
+var todos = []todo{{ID: "1", Title: "Learn GO", IsDone: "false"}, {ID: "2", Title: "Learn REACT", IsDone: "true"}, {ID: "15", Title: "Learn Advanced Go", IsDone: "false"}}
 
 // ////////////////////////////////
 // services.go TODOS SERVICE
-func todoFromDB(todoId string) (*todo)   {
-	fmt.Printf("by regex todoId: %s\n", todoId)
+func getTodoFromDB(todoId string) *todo {
 	for _, todo := range todos {
 		if todoId == todo.ID {
 			return &todo
@@ -90,8 +102,20 @@ func todoFromDB(todoId string) (*todo)   {
 	return nil
 }
 
+func deleteTodoFromDB(todoId string) *[]todo {
+	for index, todo := range todos {
+		if todoId == todo.ID {
+			todos = slicesDeleteFast(todos, index)
+			return &todos
 
+		}
+	}
+	return nil
+}
+
+// ////////////////////////////////
 // controllers.go TODOS CONTROLLER
+
 func getTodos(w http.ResponseWriter, r *http.Request) {
 	jsonBytes, err := json.Marshal(todos)
 	if err != nil {
@@ -103,21 +127,14 @@ func getTodos(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTodoById(w http.ResponseWriter, r *http.Request) {
-	//id := q.RequestURI()
-	matches := todoIdRegex.FindStringSubmatch(r.URL.Path)
-	var todoId string
-	for i, name := range todoIdRegex.SubexpNames() {
-		if name == "ID" {
-			todoId = matches[i]
-		}
-	}
+	todoId := getIdFromUrl(r.URL.Path)
 	if todoId == "" {
 		notFound(w, r)
 		return
 	}
-	
+
 	successResponseFunc := makeSuccessResponse(w, r)
-	todo := todoFromDB(todoId)
+	todo := getTodoFromDB(todoId)
 	if todo != nil {
 		successResponseFunc(todo)
 		return
@@ -128,18 +145,28 @@ func getTodoById(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func createTodo(w http.ResponseWriter, q *http.Request) {
+func createTodo(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("<h1 style='color: red;'>createTodo</h1><h2>Data</h2><p></p>"))
 }
-func updateTodo(w http.ResponseWriter, q *http.Request) {
+func updateTodo(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("<h1 style='color: red;'>updateTodo By Id</h1><h2></h2>"))
 }
-func deleteTodo(w http.ResponseWriter, q *http.Request) {
-	w.Write([]byte("<h1 style='color: red;'>deleteTodo By Id</h1><h2></h2>"))
+func deleteTodo(w http.ResponseWriter, r *http.Request) {
+	todoId := getIdFromUrl(r.URL.Path)
+	if todoId == "" {
+		notFound(w, r)
+		return
+	}
+
+	newTodos := deleteTodoFromDB(todoId)
+	successResponseFunc := makeBatchSuccessResponse(w, r)
+	successResponseFunc(newTodos)
+	return
 }
 
+
 // ////////////////////////////////
-// controllers.go TODOS CONTROLLER
+// routers.go TODOS CONTROLLER
 
 func todosRouter(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
@@ -187,4 +214,35 @@ func main() {
 	mux.HandleFunc("/todos/", todosRouter)
 	log.Println(fmt.Sprintf("Starting Server on port %s", "5000"))
 	log.Fatal(http.ListenAndServe(":5000", mux))
+}
+
+
+//////////////////////////////////
+// utils.go UTILS
+
+// general utils
+func slicesDeleteFast(s []todo, index int) []todo {
+	if index >= len(s) || index < 0 {
+		return s;
+	} 
+	if index == len(s)-1 {
+    	return s[:len(s)-1]
+	}
+    s[index] = s[len(s)-1]
+    return s[:len(s)-1]
+}
+
+
+//controller utils
+func getIdFromUrl(url string) string {
+	matches := todoIdRegex.FindStringSubmatch(url)
+	var todoId string
+	for i, name := range todoIdRegex.SubexpNames() {
+		if name == "ID" {
+			todoId = matches[i]
+		}
+	}
+	fmt.Printf("todoId: %s\n", todoId)
+
+	return todoId
 }
