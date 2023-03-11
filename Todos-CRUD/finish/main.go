@@ -52,12 +52,12 @@ var (
 	todoRegex             = regexp.MustCompile(`^\/todos\/(\d+)$`)
 	createTodoRegex       = regexp.MustCompile(`^\/todos[\/]*$`)
 	createBatchTodosRegex = regexp.MustCompile(`^\/todos\/batch[\/]*$`)
-	todoIdRegex           = regexp.MustCompile(`/todos\/?(?P<id>\W|\w*)/gm`)
+	todoIdRegex           = regexp.MustCompile(`^\/todos\/(?P<ID>([a-z,1-9,A-Z]{1,22}))\/?$`)
 )
 
-func makeSuccessResponse(w http.ResponseWriter, r *http.Request) func(todo) {
-	return func(data todo) {
-		jsonBytes, err := json.Marshal(data)
+func makeSuccessResponse(w http.ResponseWriter, r *http.Request) func(*todo) {
+	return func(data *todo) {
+		jsonBytes, err := json.Marshal(&data)
 		if err != nil {
 			internalServerError(w, r)
 			return
@@ -76,10 +76,22 @@ type todo struct {
 	IsDone string `json:"isDone"`
 }
 
-var todos = []todo{{ID: "1", Title: "Learn GO", IsDone: "false"}, {ID: "2", Title: "Learn REACT", IsDone: "true"}}
+var todos = []todo{{ID: "1", Title: "Learn GO", IsDone: "false"}, {ID: "2", Title: "Learn REACT", IsDone: "true"},{ID: "15", Title: "Learn Advanced Go", IsDone: "false"} }
 
 // ////////////////////////////////
 // services.go TODOS SERVICE
+func todoFromDB(todoId string) (*todo)   {
+	fmt.Printf("by regex todoId: %s\n", todoId)
+	for _, todo := range todos {
+		if todoId == todo.ID {
+			return &todo
+		}
+	}
+	return nil
+}
+
+
+// controllers.go TODOS CONTROLLER
 func getTodos(w http.ResponseWriter, r *http.Request) {
 	jsonBytes, err := json.Marshal(todos)
 	if err != nil {
@@ -92,40 +104,28 @@ func getTodos(w http.ResponseWriter, r *http.Request) {
 
 func getTodoById(w http.ResponseWriter, r *http.Request) {
 	//id := q.RequestURI()
-	// matches := getUserRe.FindStringSubmatch()
 	matches := todoIdRegex.FindStringSubmatch(r.URL.Path)
-	fmt.Printf("by regex name: %s\n", matches)
-
-	if len(matches) < 1 {
-		notFound(w, r)
-		return
-	}
-	regexRes := make(map[string]string)
+	var todoId string
 	for i, name := range todoIdRegex.SubexpNames() {
-		fmt.Printf("by regex name: %s\n", name)
-		if i != 0 && name != "" {
-			regexRes[name] = matches[i]
+		if name == "ID" {
+			todoId = matches[i]
 		}
 	}
-	fmt.Printf("by regex name: %s\n", regexRes["id"])
-	id := regexRes["id"]
-	if id == "" {
+	if todoId == "" {
 		notFound(w, r)
 		return
 	}
-
+	
 	successResponseFunc := makeSuccessResponse(w, r)
-	for _, todo := range todos {
-		if id == todo.ID {
-			successResponseFunc(todo)
-
-			return
-		}
+	todo := todoFromDB(todoId)
+	if todo != nil {
+		successResponseFunc(todo)
+		return
 	}
 
+	// this is impossible
 	notFound(w, r)
 	return
-
 }
 
 func createTodo(w http.ResponseWriter, q *http.Request) {
@@ -141,7 +141,7 @@ func deleteTodo(w http.ResponseWriter, q *http.Request) {
 // ////////////////////////////////
 // controllers.go TODOS CONTROLLER
 
-func todosController(w http.ResponseWriter, r *http.Request) {
+func todosRouter(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 	switch {
 	case r.Method == http.MethodGet && listTodosRegex.MatchString(r.URL.Path):
@@ -184,7 +184,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", liveness)
 	mux.HandleFunc("/hello", hello)
-	mux.HandleFunc("/todos/", todosController)
+	mux.HandleFunc("/todos/", todosRouter)
 	log.Println(fmt.Sprintf("Starting Server on port %s", "5000"))
 	log.Fatal(http.ListenAndServe(":5000", mux))
 }
