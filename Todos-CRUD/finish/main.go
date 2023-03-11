@@ -159,6 +159,11 @@ func deleteTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newTodos := deleteTodoFromDB(todoId)
+	if newTodos == nil {
+		notFound(w, r)
+		return
+	}
+	
 	successResponseFunc := makeBatchSuccessResponse(w, r)
 	successResponseFunc(newTodos)
 	return
