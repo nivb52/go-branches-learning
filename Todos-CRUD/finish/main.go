@@ -263,8 +263,6 @@ func getIdFromUrl(url string) string {
 	return todoId
 }
 
-// ////////////////////////////////
-// utils.go TODO UTILS
 var (
 	listTodosRegex        = regexp.MustCompile(`^\/todos[\/]*$`)
 	todoRegex             = regexp.MustCompile(`^\/todos\/(\d+)$`)
