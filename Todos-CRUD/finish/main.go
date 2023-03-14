@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 )
 
 func notFound(w http.ResponseWriter, r *http.Request) {
@@ -46,13 +47,20 @@ func internalServerError(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonBytes)
 }
 
-
 // ////////////////////////////////
 // reposetory.go TODOS REPO
 type todo struct {
 	ID     string `json:"id"`
 	Title  string `json:"title"`
 	IsDone string `json:"isDone"`
+}
+
+var lastTodoId = 16
+
+func generateTodoId() string {
+	lastTodoId = lastTodoId + 1
+	lastTodoIdAsStr := strconv.Itoa(lastTodoId)
+	return lastTodoIdAsStr
 }
 
 var todos = []todo{{ID: "1", Title: "Learn GO", IsDone: "false"}, {ID: "2", Title: "Learn REACT", IsDone: "true"}, {ID: "15", Title: "Learn Advanced Go", IsDone: "false"}}
@@ -86,10 +94,18 @@ func updateTodoInDB(todoId string, newData todo) *todo {
 			todo.Title = newData.Title
 			fmt.Printf("update in db %v", todo)
 			todos[index] = todo
-			return &todo		
+			return &todo
 		}
 	}
-	return nil;
+	return nil
+}
+
+func createTodoInDB(newTodo *todo) *todo {
+	todoId := generateTodoId()
+	newTodo.ID = todoId
+	// newTodo := todo{ Title: title, IsActive: isActive, ID: todoId}
+	todos = append(todos, *newTodo)
+	return newTodo
 }
 
 // ////////////////////////////////
@@ -125,7 +141,29 @@ func getTodoById(w http.ResponseWriter, r *http.Request) {
 }
 
 func createTodo(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("<h1 style='color: red;'>createTodo</h1><h2>Data</h2><p></p>"))
+	fmt.Println("createTodo")
+
+	defer r.Body.Close()
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		// connection error
+		internalServerError(w, r)
+		return
+	}
+
+	var newData todo
+	err = json.Unmarshal(body, &newData)
+	if err != nil {
+		internalServerError(w, r)
+		return
+	}
+	fmt.Println("- newData ", newData)
+
+	createdTodo := createTodoInDB(&newData)
+
+	successResponseFunc := makeSuccessResponse(w, r)
+	successResponseFunc(createdTodo)
+	return
 }
 
 func updateTodo(w http.ResponseWriter, r *http.Request) {
@@ -137,7 +175,7 @@ func updateTodo(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-        // connection error
+		// connection error
 		// link: https://stackoverflow.com/questions/71338019/why-is-response-body-in-golang-is-a-readcloser
 		internalServerError(w, r)
 		return
@@ -177,29 +215,29 @@ func deleteTodo(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
-	
+
 	successResponseFunc := makeBatchSuccessResponse(w, r)
 	successResponseFunc(newTodos)
 	return
 }
-
 
 // ////////////////////////////////
 // routers.go TODOS CONTROLLER
 
 func todosRouter(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
+	fmt.Println(createTodoRegex.MatchString(r.URL.Path))
 	switch {
 	case r.Method == http.MethodGet && listTodosRegex.MatchString(r.URL.Path):
 		getTodos(w, r)
 		return
-	case r.Method == http.MethodGet && todoRegex.MatchString(r.URL.Path):
+	case r.Method == http.MethodGet && todoWithIdRegex.MatchString(r.URL.Path):
 		getTodoById(w, r)
 		return
-	case r.Method == http.MethodDelete && todoRegex.MatchString(r.URL.Path):
+	case r.Method == http.MethodDelete && todoWithIdRegex.MatchString(r.URL.Path):
 		deleteTodo(w, r)
 		return
-	case (r.Method == http.MethodPost || r.Method == http.MethodPut) && todoIdRegex.MatchString(r.URL.Path):
+	case (r.Method == http.MethodPost || r.Method == http.MethodPut) && todoNamedFieldIdRegex.MatchString(r.URL.Path):
 		updateTodo(w, r)
 		return
 	case (r.Method == http.MethodPost) && (createTodoRegex.MatchString(r.URL.Path)):
@@ -235,28 +273,30 @@ func main() {
 	log.Fatal(http.ListenAndServe(":5000", mux))
 }
 
-
 //////////////////////////////////
 // utils.go UTILS
 
 // general utils
 func slicesDeleteFast(s []todo, index int) []todo {
 	if index >= len(s) || index < 0 {
-		return s;
-	} 
-	if index == len(s)-1 {
-    	return s[:len(s)-1]
+		return s
 	}
-    s[index] = s[len(s)-1]
-    return s[:len(s)-1]
+	if index == len(s)-1 {
+		return s[:len(s)-1]
+	}
+	s[index] = s[len(s)-1]
+	return s[:len(s)-1]
 }
 
+// func generateUUID () string {
+// 	return time.Now().UnixNano()
+// }
 
-//controller utils
+// controller utils
 func getIdFromUrl(url string) string {
-	matches := todoIdRegex.FindStringSubmatch(url)
+	matches := todoNamedFieldIdRegex.FindStringSubmatch(url)
 	var todoId string
-	for i, name := range todoIdRegex.SubexpNames() {
+	for i, name := range todoNamedFieldIdRegex.SubexpNames() {
 		if name == "ID" {
 			todoId = matches[i]
 		}
@@ -267,11 +307,11 @@ func getIdFromUrl(url string) string {
 }
 
 var (
-	listTodosRegex        = regexp.MustCompile(`^\/todos[\/]*$`)
-	todoRegex             = regexp.MustCompile(`^\/todos\/(\d+)$`)
-	createTodoRegex       = regexp.MustCompile(`^\/todos[\/]*$`)
+	listTodosRegex        = regexp.MustCompile(`^\/todos[\/]{0,1}$`)
+	createTodoRegex       = regexp.MustCompile(`^\/todos[\/]{0,1}$`)
+	todoWithIdRegex       = regexp.MustCompile(`^\/todos\/(\d+)$`)
+	todoNamedFieldIdRegex = regexp.MustCompile(`^\/todos\/(?P<ID>([a-z,1-9,A-Z]{1,22}))\/?$`)
 	createBatchTodosRegex = regexp.MustCompile(`^\/todos\/batch[\/]*$`)
-	todoIdRegex           = regexp.MustCompile(`^\/todos\/(?P<ID>([a-z,1-9,A-Z]{1,22}))\/?$`)
 )
 
 func makeSuccessResponse(w http.ResponseWriter, r *http.Request) func(*todo) {
