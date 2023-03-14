@@ -33,7 +33,7 @@ content-type: application/json
     
 {
     "title": "test-todo",
-    "IsDone": "false"
+    "isDone": "false"
 }
 
 ###
