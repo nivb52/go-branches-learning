@@ -142,8 +142,10 @@ func updateTodo(w http.ResponseWriter, r *http.Request) {
 		internalServerError(w, r)
 		return
 	}
-	x := string(body)
-	fmt.Println("- body ", x)
+	// x := string(body)
+	// fmt.Println("- body ", x)
+	// TODO: verify fields
+
 	var newData todo
 	err = json.Unmarshal(body, &newData)
 	if err != nil {
@@ -151,6 +153,7 @@ func updateTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println("- newData ", newData)
+
 	updatedTodo := updateTodoInDB(todoId, newData)
 	if updatedTodo == nil {
 		notFound(w, r)
