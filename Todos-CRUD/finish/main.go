@@ -141,8 +141,6 @@ func getTodoById(w http.ResponseWriter, r *http.Request) {
 }
 
 func createTodo(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("createTodo")
-
 	defer r.Body.Close()
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -226,7 +224,6 @@ func deleteTodo(w http.ResponseWriter, r *http.Request) {
 
 func todosRouter(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
-	fmt.Println(createTodoRegex.MatchString(r.URL.Path))
 	switch {
 	case r.Method == http.MethodGet && listTodosRegex.MatchString(r.URL.Path):
 		getTodos(w, r)
@@ -237,12 +234,13 @@ func todosRouter(w http.ResponseWriter, r *http.Request) {
 	case r.Method == http.MethodDelete && todoWithIdRegex.MatchString(r.URL.Path):
 		deleteTodo(w, r)
 		return
-	case (r.Method == http.MethodPost || r.Method == http.MethodPut) && todoNamedFieldIdRegex.MatchString(r.URL.Path):
-		updateTodo(w, r)
-		return
 	case (r.Method == http.MethodPost) && (createTodoRegex.MatchString(r.URL.Path)):
 		createTodo(w, r)
 		return
+	case (r.Method == http.MethodPost || r.Method == http.MethodPut) && todoNamedFieldIdRegex.MatchString(r.URL.Path):
+		updateTodo(w, r)
+		return
+
 	case (r.Method == http.MethodPost) && (createBatchTodosRegex.MatchString(r.URL.Path)):
 		notImplemented(w, r)
 		return
@@ -268,6 +266,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", liveness)
 	mux.HandleFunc("/hello", hello)
+	mux.HandleFunc("/todos", todosRouter)
 	mux.HandleFunc("/todos/", todosRouter)
 	log.Println(fmt.Sprintf("Starting Server on port %s", "5000"))
 	log.Fatal(http.ListenAndServe(":5000", mux))
@@ -307,8 +306,8 @@ func getIdFromUrl(url string) string {
 }
 
 var (
-	listTodosRegex        = regexp.MustCompile(`^\/todos[\/]{0,1}$`)
-	createTodoRegex       = regexp.MustCompile(`^\/todos[\/]{0,1}$`)
+	listTodosRegex        = regexp.MustCompile(`^\/todos([\/]{0,1})$`)
+	createTodoRegex       = regexp.MustCompile(`^\/todos([\/]{0,1})$`)
 	todoWithIdRegex       = regexp.MustCompile(`^\/todos\/(\d+)$`)
 	todoNamedFieldIdRegex = regexp.MustCompile(`^\/todos\/(?P<ID>([a-z,1-9,A-Z]{1,22}))\/?$`)
 	createBatchTodosRegex = regexp.MustCompile(`^\/todos\/batch[\/]*$`)
