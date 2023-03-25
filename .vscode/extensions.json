@@ -3,7 +3,13 @@
 	// Extension identifier format: ${publisher}.${name}. Example: vscode.csharp
 	// List of extensions which should be recommended for users of this workspace.
 	"recommendations": [
-		"aldijav.golangwithdidi"
+		"aldijav.golangwithdidi",
+		"humao.rest-client",
+		"golang.go",
+		"maxnatchanon.go-struct-tag-autogen",
+		"neonxp.gotools",
+		"ricardoerikson.vscode-go-impl-methods",
+		"yokoe.vscode-postfix-go"
 	],
 	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
 	"unwantedRecommendations": []
