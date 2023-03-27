@@ -8,5 +8,5 @@ And adding from this basic Read only example
 Full CRUD
 
 
-[ Golang REST API Example [Without Framework] ] (https://golang.cafe/blog/golang-rest-api-example.html)
+[ Golang REST API Example [Without Framework] (https://golang.cafe/blog/golang-rest-api-example.html)
 [ Basic Server Mux in Go] (https://www.alexedwards.net/blog/an-introduction-to-handlers-and-servemuxes-in-go)
