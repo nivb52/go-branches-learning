@@ -1,8 +1,5 @@
 
-## GO.MOD 
-```go mod init github.com/USERNAME/REPONAME```
-
-```go mod init github.com/USERNAME/REPONAME/FOLDER```
+## GO Type Methods 
 
 
 ### Running the project
