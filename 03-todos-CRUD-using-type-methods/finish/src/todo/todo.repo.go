@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	utils "github.com/nivb52/go-branches-learning/02-todos-CRUD-using-type-methods/finish/src/utils"
+	utils "github.com/nivb52/go-branches-learning/03-todos-CRUD-using-type-methods/finish/src/utils"
 )
 
 // ////////////////////////////////
