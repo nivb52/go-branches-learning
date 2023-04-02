@@ -7,14 +7,6 @@ content-type: application/json
 
 ###
 
-
-// Get All Todos
-GET http://{{host}}/todos HTTP/1.1
-content-type: application/json
-
-###
-
-
 // Get Todo By ID
 GET http://{{host}}/todos/15 HTTP/1.1
 content-type: application/json
