@@ -30,6 +30,28 @@ content-type: application/json
 
 ###
 
+// Create Todo -> short title - ment to failed
+POST http://{{host}}/todos/ HTTP/1.1
+content-type: application/json
+    
+{
+    "title": "2c",
+    "isDone": false
+}
+
+###
+
+// Create Todo -> long title - ment to failed
+POST http://{{host}}/todos/ HTTP/1.1
+content-type: application/json
+
+{
+    "title": "this is too long title for the todo and need to be rejected",
+    "isDone": true
+}
+
+###
+
 // Update Todo
 PUT http://{{host}}/todos/2 HTTP/1.1
 content-type: application/json
@@ -39,3 +61,24 @@ content-type: application/json
     "isDone": true
 }
 
+###
+
+// Update Todo -> short title - ment to failed
+PUT http://{{host}}/todos/2 HTTP/1.1
+content-type: application/json
+
+{
+    "title": "2c",
+    "isDone": true
+}
+
+###
+
+// Update Todo -> long title - ment to failed
+PUT http://{{host}}/todos/2 HTTP/1.1
+content-type: application/json
+
+{
+    "title": "this is too long title for the todo and need to be rejected",
+    "isDone": true
+}

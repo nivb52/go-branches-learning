@@ -1,6 +1,7 @@
 package todo
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -17,29 +18,48 @@ type Todo struct {
 	IsDone bool   `json:"isDone"`
 }
 
-func NewTodo(title string, isDone bool) *Todo {
-	return &Todo{
-		ID:     generateTodoId(),
-		Title:  title,
-		IsDone: isDone,
+func NewTodo(todo Todo) (Todo, error) {
+	newTodo := Todo{
+		ID: generateTodoId(),
 	}
+	err := newTodo.SetIsDone(todo.IsDone)
+	if err != nil {
+		return todo, err
+	}
+	err = newTodo.SetTitle(todo.Title)
+	if err != nil {
+		return todo, err
+	}
+
+	return newTodo, nil
 }
 
 func (t *Todo) GetIsDone() bool {
 	return t.IsDone
 }
 
-func (t *Todo) SetIsDone(value bool) {
+func (t *Todo) SetIsDone(value bool) error {
+	if reflect.TypeOf(value).Kind() != reflect.Bool {
+		return errors.New("todo field isDone must be a boolean")
+	}
 	t.IsDone = value
+	return nil
 }
 
 func (t *Todo) GetTitle() string {
 	return t.Title
 }
 
-func (t *Todo) SetTitle(value string) {
-
+func (t *Todo) SetTitle(value string) error {
+	if reflect.TypeOf(value).Kind() != reflect.String {
+		return errors.New("todo field title must be a string")
+	} else if len(value) < 3 {
+		return errors.New("title is too short, please provide at least 3 chars")
+	} else if len(value) > 35 {
+		return errors.New("title is too long, please provide less than 35 chars")
+	}
 	t.Title = value
+	return nil
 }
 
 var lastTodoId = 15
@@ -74,28 +94,33 @@ func deleteTodoInDB(todoId string) *[]Todo {
 	return nil
 }
 
-func updateTodoInDB(todoId string, newData Todo) *Todo {
+func updateTodoInDB(todoId string, newData Todo) (*Todo, error) {
 	for index, todo := range todos {
 		if todoId == todo.ID {
-			if reflect.TypeOf(todo.IsDone).Kind() == reflect.Bool {
-				todo.IsDone = newData.IsDone
+			err := todo.SetIsDone(newData.IsDone)
+			if err != nil {
+				return &todo, err
 			}
-			if reflect.TypeOf(todo.Title).Kind() == reflect.String {
-				todo.Title = newData.Title
+			err = todo.SetTitle(newData.Title)
+			if err != nil {
+				return &todo, err
 			}
-
-			fmt.Printf("update in db %v", todo)
+			fmt.Printf("success update in db %v", todo)
 			todos[index] = todo
-			return &todo
+			return &todo, nil
 		}
 	}
-	return nil
+	return nil, nil
 }
 
-func createTodoInDB(newTodo *Todo) *Todo {
-	todoId := generateTodoId()
-	newTodo.ID = todoId
+func createTodoInDB(newData Todo) (*Todo, error) {
+	newTodo, err := NewTodo(newData)
+	fmt.Printf("success created in db %v", newTodo)
+
+	if err != nil {
+		return nil, err
+	}
 	// newTodo := todo{ Title: title, IsActive: isActive, ID: todoId}
-	todos = append(todos, *newTodo)
-	return newTodo
+	todos = append(todos, newTodo)
+	return &newTodo, nil
 }

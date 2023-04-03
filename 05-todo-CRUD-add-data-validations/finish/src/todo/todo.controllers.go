@@ -70,7 +70,12 @@ func (t TodoController) createTodo() {
 	}
 	fmt.Println("- newData ", newData)
 
-	createdTodo := createTodoInDB(&newData)
+	createdTodo, validationError := createTodoInDB(newData)
+	if validationError != nil {
+		t.BedRequestServerError(validationError)
+		return
+	}
+
 	jsonBytes, err := json.Marshal(createdTodo)
 	t.MakeSuccessResponse(jsonBytes, err)
 	return
@@ -90,9 +95,6 @@ func (t TodoController) updateTodo() {
 		t.InternalServerError()
 		return
 	}
-	// x := string(body)
-	// fmt.Println("- body ", x)
-	// TODO: verify fields
 
 	var newData Todo
 	err = json.Unmarshal(body, &newData)
@@ -100,15 +102,19 @@ func (t TodoController) updateTodo() {
 		t.InternalServerError()
 		return
 	}
-	fmt.Println("- newData ", newData)
 
-	updatedTodo := updateTodoInDB(todoId, newData)
+	updatedTodo, validationError := updateTodoInDB(todoId, newData)
+	if validationError != nil {
+		t.BedRequestServerError(validationError)
+		return
+	}
 	if updatedTodo == nil {
 		t.NotFound()
 		return
 	}
 
 	jsonBytes, err := json.Marshal(updatedTodo)
+	fmt.Println("- newData ", newData)
 	t.MakeSuccessResponse(jsonBytes, err)
 	return
 }
