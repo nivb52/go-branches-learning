@@ -107,8 +107,7 @@ func (t TodoController) updateTodo() {
 	if validationError != nil {
 		t.BedRequestServerError(validationError)
 		return
-	}
-	if updatedTodo == nil {
+	} else if updatedTodo == nil {
 		t.NotFound()
 		return
 	}
