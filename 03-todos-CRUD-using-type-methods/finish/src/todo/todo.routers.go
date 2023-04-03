@@ -11,11 +11,9 @@ import (
 
 func TodosRouter(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
-	// var serv TodoController
-	// serv.Res = w
-	// serv.Req = r
 	serv := TodoController{
-		HttpRouter: commonController.HttpRouter{Res: w,
+		HttpRouter: commonController.HttpRouter{
+			Res: w,
 			Req: r,
 		},
 	}
