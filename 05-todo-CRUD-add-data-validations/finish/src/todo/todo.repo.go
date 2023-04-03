@@ -2,6 +2,7 @@ package todo
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 
 	utils "github.com/nivb52/go-branches-learning/05-todo-CRUD-add-data-validations/finish/src/utils"
@@ -51,6 +52,12 @@ func deleteTodoInDB(todoId string) *[]Todo {
 func updateTodoInDB(todoId string, newData Todo) *Todo {
 	for index, todo := range todos {
 		if todoId == todo.ID {
+			if reflect.TypeOf(todo.IsDone).Kind() == reflect.Bool {
+				todo.IsDone = newData.IsDone
+			}
+			if reflect.TypeOf(todo.Title).Kind() == reflect.String {
+				todo.Title = newData.Title
+			}
 
 			fmt.Printf("update in db %v", todo)
 			todos[index] = todo
