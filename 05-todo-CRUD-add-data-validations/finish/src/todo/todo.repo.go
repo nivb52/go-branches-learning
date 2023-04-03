@@ -115,12 +115,11 @@ func updateTodoInDB(todoId string, newData Todo) (*Todo, error) {
 
 func createTodoInDB(newData Todo) (*Todo, error) {
 	newTodo, err := NewTodo(newData)
-	fmt.Printf("success created in db %v", newTodo)
 
 	if err != nil {
 		return nil, err
 	}
-	// newTodo := todo{ Title: title, IsActive: isActive, ID: todoId}
 	todos = append(todos, newTodo)
+	fmt.Printf("success created in db %v", newTodo)
 	return &newTodo, nil
 }
