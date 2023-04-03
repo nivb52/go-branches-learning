@@ -2,8 +2,6 @@ package todo
 
 import (
 	"net/http"
-
-	commonController "github.com/nivb52/go-branches-learning/03-todos-CRUD-using-type-methods/finish/src/common"
 )
 
 // ////////////////////////////////
@@ -11,28 +9,32 @@ import (
 
 func TodosRouter(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
+	var serv TodoController
+	serv.Res = w
+	serv.Req = r
+	// serv := commonController.HttpContext{Writer: w, Req: *r}
 	switch {
 	case r.Method == http.MethodGet && listTodosRegex.MatchString(r.URL.Path):
-		getTodos(w, r)
+		serv.getTodos()
 		return
 	case r.Method == http.MethodGet && todoWithIdRegex.MatchString(r.URL.Path):
-		getTodoById(w, r)
+		serv.getTodoById()
 		return
 	case r.Method == http.MethodDelete && todoWithIdRegex.MatchString(r.URL.Path):
-		deleteTodo(w, r)
+		serv.deleteTodo()
 		return
 	case (r.Method == http.MethodPost) && (createTodoRegex.MatchString(r.URL.Path)):
-		createTodo(w, r)
+		serv.createTodo()
 		return
 	case (r.Method == http.MethodPost || r.Method == http.MethodPut) && todoNamedFieldIdRegex.MatchString(r.URL.Path):
-		updateTodo(w, r)
+		serv.updateTodo()
 		return
 
 	case (r.Method == http.MethodPost) && (createBatchTodosRegex.MatchString(r.URL.Path)):
-		commonController.NotImplemented(w, r)
+		serv.NotImplemented()
 		return
 	default:
-		commonController.NotFound(w, r)
+		serv.NotFound()
 		return
 	}
 }

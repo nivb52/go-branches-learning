@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 	"regexp"
 
-	commonController "github.com/nivb52/go-branches-learning/03-todos-CRUD-using-type-methods/finish/src/common"
+	commonController "github.com/nivb52/go-branches-learning/03-todos-CRUD-using-type-methods/finish/src/common/controller"
 )
 
 // ////////////////////////////////
@@ -20,71 +21,80 @@ var (
 	createBatchTodosRegex = regexp.MustCompile(`^\/todos\/batch[\/]*$`)
 )
 
-func getTodos(w http.ResponseWriter, r *http.Request) {
-	jsonBytes, err := json.Marshal(todos)
-	if err != nil {
-		commonController.InternalServerError(w, r)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonBytes)
+type TodoController struct {
+	Res http.ResponseWriter
+	Req *http.Request
+	commonController.HttpRouter
 }
 
-func getTodoById(w http.ResponseWriter, r *http.Request) {
-	todoId := getIdFromUrl(r.URL.Path)
+func (t TodoController) getTodos() {
+	jsonBytes, err := json.Marshal(todos)
+	if err != nil {
+		t.InternalServerError()
+		return
+	}
+	t.Res.WriteHeader(http.StatusOK)
+	t.Res.Write(jsonBytes)
+}
+
+func (t TodoController) getTodoById() {
+	todoId := getIdFromUrl(t.Req.URL.Path)
+
 	if todoId == "" {
-		commonController.NotFound(w, r)
+		t.NotFound()
 		return
 	}
 
-	successResponseFunc := makeSuccessResponse(w, r)
 	todo := getTodoFromDB(todoId)
+	fmt.Println("================ 1 ===================")
+	fmt.Println("== todo kind ==", reflect.ValueOf(todo).Kind())
+	fmt.Println("== todo kind ==", reflect.ValueOf(&todo).Kind())
+	fmt.Println("== todo kind ==", reflect.ValueOf(*todo).Kind())
 	if todo != nil {
-		successResponseFunc(todo)
+		fmt.Println("================ 2 ===================")
+		t.MakeSuccessResponse(&todo)
 		return
 	}
 
 	// this is impossible
-	commonController.NotFound(w, r)
+	t.NotFound()
 	return
 }
 
-func createTodo(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	body, err := io.ReadAll(r.Body)
+func (t TodoController) createTodo() {
+	defer t.Req.Body.Close()
+	body, err := io.ReadAll(t.Req.Body)
 	if err != nil {
 		// connection error
-		commonController.InternalServerError(w, r)
+		t.InternalServerError()
 		return
 	}
 
 	var newData Todo
 	err = json.Unmarshal(body, &newData)
 	if err != nil {
-		commonController.InternalServerError(w, r)
+		t.InternalServerError()
 		return
 	}
 	fmt.Println("- newData ", newData)
 
 	createdTodo := createTodoInDB(&newData)
-
-	successResponseFunc := makeSuccessResponse(w, r)
-	successResponseFunc(createdTodo)
+	t.MakeSuccessResponse(createdTodo)
 	return
 }
 
-func updateTodo(w http.ResponseWriter, r *http.Request) {
-	todoId := getIdFromUrl(r.URL.Path)
+func (t TodoController) updateTodo() {
+	todoId := getIdFromUrl(t.Req.URL.Path)
 	if todoId == "" {
-		commonController.NotFound(w, r)
+		t.NotFound()
 		return
 	}
-	defer r.Body.Close()
-	body, err := io.ReadAll(r.Body)
+	defer t.Req.Body.Close()
+	body, err := io.ReadAll(t.Req.Body)
 	if err != nil {
 		// connection error
 		// link: https://stackoverflow.com/questions/71338019/why-is-response-body-in-golang-is-a-readcloser
-		commonController.InternalServerError(w, r)
+		t.InternalServerError()
 		return
 	}
 	// x := string(body)
@@ -94,36 +104,34 @@ func updateTodo(w http.ResponseWriter, r *http.Request) {
 	var newData Todo
 	err = json.Unmarshal(body, &newData)
 	if err != nil {
-		commonController.InternalServerError(w, r)
+		t.InternalServerError()
 		return
 	}
 	fmt.Println("- newData ", newData)
 
 	updatedTodo := updateTodoInDB(todoId, newData)
 	if updatedTodo == nil {
-		commonController.NotFound(w, r)
+		t.NotFound()
 		return
 	}
 
-	successResponseFunc := makeSuccessResponse(w, r)
-	successResponseFunc(updatedTodo)
+	t.MakeSuccessResponse(updatedTodo)
 	return
 }
 
-func deleteTodo(w http.ResponseWriter, r *http.Request) {
-	todoId := getIdFromUrl(r.URL.Path)
+func (t TodoController) deleteTodo() {
+	todoId := getIdFromUrl(t.Req.URL.Path)
 	if todoId == "" {
-		commonController.NotFound(w, r)
+		t.NotFound()
 		return
 	}
 
 	newTodos := deleteTodoInDB(todoId)
 	if newTodos == nil {
-		commonController.NotFound(w, r)
+		t.NotFound()
 		return
 	}
 
-	successResponseFunc := makeBatchSuccessResponse(w, r)
-	successResponseFunc(newTodos)
+	t.MakeSuccessResponse(newTodos)
 	return
 }
