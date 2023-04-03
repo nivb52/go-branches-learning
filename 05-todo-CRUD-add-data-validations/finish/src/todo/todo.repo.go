@@ -13,7 +13,7 @@ import (
 type Todo struct {
 	ID     string `json:"id"`
 	Title  string `json:"title"`
-	IsDone string `json:"isDone"`
+	IsDone bool   `json:"isDone"`
 }
 
 var lastTodoId = 16
@@ -24,7 +24,7 @@ func generateTodoId() string {
 	return lastTodoIdAsStr
 }
 
-var todos = []Todo{{ID: "1", Title: "Learn GO", IsDone: "false"}, {ID: "2", Title: "Learn REACT", IsDone: "true"}, {ID: "15", Title: "Learn Advanced Go", IsDone: "false"}}
+var todos = []Todo{{ID: "1", Title: "Learn GO", IsDone: false}, {ID: "2", Title: "Learn REACT", IsDone: true}, {ID: "15", Title: "Learn Advanced Go", IsDone: false}}
 
 // ////////////////////////////////
 // services.go TODOS SERVICE
@@ -51,8 +51,7 @@ func deleteTodoInDB(todoId string) *[]Todo {
 func updateTodoInDB(todoId string, newData Todo) *Todo {
 	for index, todo := range todos {
 		if todoId == todo.ID {
-			todo.IsDone = newData.IsDone
-			todo.Title = newData.Title
+
 			fmt.Printf("update in db %v", todo)
 			todos[index] = todo
 			return &todo

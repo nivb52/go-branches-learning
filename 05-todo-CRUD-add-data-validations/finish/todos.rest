@@ -25,7 +25,7 @@ content-type: application/json
     
 {
     "title": "test-todo",
-    "isDone": "false"
+    "isDone": false
 }
 
 ###
@@ -36,6 +36,6 @@ content-type: application/json
 
 {
     "title": "updated-todo",
-    "isDone": "true"
+    "isDone": true
 }
 
