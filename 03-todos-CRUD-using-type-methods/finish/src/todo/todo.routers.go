@@ -2,6 +2,8 @@ package todo
 
 import (
 	"net/http"
+
+	commonController "github.com/nivb52/go-branches-learning/03-todos-CRUD-using-type-methods/finish/src/common/controller"
 )
 
 // ////////////////////////////////
@@ -9,10 +11,14 @@ import (
 
 func TodosRouter(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
-	var serv TodoController
-	serv.Res = w
-	serv.Req = r
-	// serv := commonController.HttpContext{Writer: w, Req: *r}
+	// var serv TodoController
+	// serv.Res = w
+	// serv.Req = r
+	serv := TodoController{
+		HttpRouter: commonController.HttpRouter{Res: w,
+			Req: r,
+		},
+	}
 	switch {
 	case r.Method == http.MethodGet && listTodosRegex.MatchString(r.URL.Path):
 		serv.getTodos()

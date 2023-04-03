@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"reflect"
 	"regexp"
 
 	commonController "github.com/nivb52/go-branches-learning/03-todos-CRUD-using-type-methods/finish/src/common/controller"
@@ -22,8 +21,6 @@ var (
 )
 
 type TodoController struct {
-	Res http.ResponseWriter
-	Req *http.Request
 	commonController.HttpRouter
 }
 
@@ -45,18 +42,13 @@ func (t TodoController) getTodoById() {
 		return
 	}
 
-	todo := getTodoFromDB(todoId)
-	fmt.Println("================ 1 ===================")
-	fmt.Println("== todo kind ==", reflect.ValueOf(todo).Kind())
-	fmt.Println("== todo kind ==", reflect.ValueOf(&todo).Kind())
-	fmt.Println("== todo kind ==", reflect.ValueOf(*todo).Kind())
-	if todo != nil {
-		fmt.Println("================ 2 ===================")
-		t.MakeSuccessResponse(&todo)
+	todoPtr := getTodoFromDB(todoId)
+	if todoPtr != nil {
+		jsonBytes, err := json.Marshal(*todoPtr)
+		t.MakeSuccessResponse(jsonBytes, err)
 		return
 	}
-
-	// this is impossible
+	// this should be impossible
 	t.NotFound()
 	return
 }
@@ -79,7 +71,8 @@ func (t TodoController) createTodo() {
 	fmt.Println("- newData ", newData)
 
 	createdTodo := createTodoInDB(&newData)
-	t.MakeSuccessResponse(createdTodo)
+	jsonBytes, err := json.Marshal(createdTodo)
+	t.MakeSuccessResponse(jsonBytes, err)
 	return
 }
 
@@ -115,7 +108,8 @@ func (t TodoController) updateTodo() {
 		return
 	}
 
-	t.MakeSuccessResponse(updatedTodo)
+	jsonBytes, err := json.Marshal(updatedTodo)
+	t.MakeSuccessResponse(jsonBytes, err)
 	return
 }
 
@@ -132,6 +126,7 @@ func (t TodoController) deleteTodo() {
 		return
 	}
 
-	t.MakeSuccessResponse(newTodos)
+	jsonBytes, err := json.Marshal(newTodos)
+	t.MakeSuccessResponse(jsonBytes, err)
 	return
 }

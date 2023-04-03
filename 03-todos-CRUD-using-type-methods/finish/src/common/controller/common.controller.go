@@ -2,16 +2,8 @@ package commonController
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
-
-type HttpCommonResponse interface {
-	NotFound()
-	NotImplemented()
-	InternalServerError()
-	MakeSuccessResponse()
-}
 
 type HttpRouter struct {
 	Res http.ResponseWriter
@@ -54,9 +46,7 @@ func (h HttpRouter) InternalServerError() {
 	h.Res.Write(jsonBytes)
 }
 
-func (h HttpRouter) MakeSuccessResponse(data any) {
-	fmt.Println("make success response |  data:", data)
-	jsonBytes, err := json.Marshal(data)
+func (h HttpRouter) MakeSuccessResponse(jsonBytes []byte, err error) {
 	if err != nil {
 		h.InternalServerError()
 		return
