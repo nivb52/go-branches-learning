@@ -105,8 +105,8 @@ func updateTodoInDB(todoId string, newData Todo) (*Todo, error) {
 			if err != nil {
 				return &todo, err
 			}
-			fmt.Printf("success update in db %v", todo)
 			todos[index] = todo
+			fmt.Printf("success update in db %v", todo)
 			return &todo, nil
 		}
 	}
